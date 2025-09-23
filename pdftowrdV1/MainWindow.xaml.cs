@@ -2,15 +2,13 @@
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.Win32;
-using PdfSharpCore.Pdf;
-using PdfSharpCore.Pdf.IO;
+using PdfiumViewer;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Reflection.PortableExecutable;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Windows;
 using System.Windows.Forms;
@@ -34,17 +32,6 @@ namespace PdfToWordArabicOCR
             if (dlg.ShowDialog() == true)
                 pdfPath = dlg.FileName;
         }
-
-        //private void btnSelectOutput_Click(object sender, RoutedEventArgs e)
-        //{
-        //    var dlg = new Microsoft.Win32.OpenFileDialog();
-        //    bool? result = dlg.ShowDialog();
-
-        //    if (result == true)
-        //    {
-        //        pdfPath = dlg.FileName;
-        //    }
-        //}
 
         private void btnSelectOutput_Click(object sender, RoutedEventArgs e)
         {
@@ -87,20 +74,16 @@ namespace PdfToWordArabicOCR
         List<string> ConvertPdfToImages(string pdfPath, string outputFolder)
         {
             var images = new List<string>();
-            using var document = PdfReader.Open(pdfPath, PdfDocumentOpenMode.ReadOnly);
 
-            for (int i = 0; i < document.PageCount; i++)
+            using (var doc = PdfiumViewer.PdfDocument.Load(pdfPath))
             {
-                int width = 1200;
-                int height = 1600;
-                using var bmp = new Bitmap(width, height);
-                using var gfx = Graphics.FromImage(bmp);
-                gfx.Clear(System.Drawing.Color.White);
-                gfx.DrawString($"صفحة {i + 1} (رسم تجريبي)", new System.Drawing.Font("Arial", 24), System.Drawing.Brushes.Black, new System.Drawing.PointF(100, 100));
-
-                string imgPath = Path.Combine(outputFolder, $"page_{i + 1}.png");
-                bmp.Save(imgPath, ImageFormat.Png);
-                images.Add(imgPath);
+                for (int i = 0; i < doc.PageCount; i++)
+                {
+                    using var img = doc.Render(i, 1200, 1600, true);
+                    string imgPath = Path.Combine(outputFolder, $"page_{i + 1}.png");
+                    img.Save(imgPath, ImageFormat.Png);
+                    images.Add(imgPath);
+                }
             }
 
             return images;
@@ -114,10 +97,10 @@ namespace PdfToWordArabicOCR
             await stream.WriteAsync(buffer);
             stream.Seek(0);
 
-            var decoder = await Windows.Graphics.Imaging.BitmapDecoder.CreateAsync(stream);
+            var decoder = await BitmapDecoder.CreateAsync(stream);
             var bitmap = await decoder.GetSoftwareBitmapAsync();
 
-            var ocrEngine = Windows.Media.Ocr.OcrEngine.TryCreateFromLanguage(new Language("ar"));
+            var ocrEngine = OcrEngine.TryCreateFromLanguage(new Language("ar"));
             var result = await ocrEngine.RecognizeAsync(bitmap);
 
             return result.Text;
