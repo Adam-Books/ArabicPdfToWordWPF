@@ -1,0 +1,12 @@
+﻿<Window x:Class="PdfToWordArabicOCR.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="PDF إلى Word - OCR عربي" Height="300" Width="400">
+    <StackPanel Margin="20">
+        <Button Name="btnSelectPdf" Content="📄 اختر ملف PDF" Click="btnSelectPdf_Click" Margin="5"/>
+        <Button Name="btnSelectOutput" Content="📁 اختر مجلد الحفظ" Click="btnSelectOutput_Click" Margin="5"/>
+        <Button Name="btnStart" Content="🚀 ابدأ التحويل" Click="btnStart_Click" Margin="5"/>
+        <ProgressBar Name="progressBar" Height="20" Margin="5"/>
+        <TextBlock Name="txtStatus" Margin="5"/>
+    </StackPanel>
+</Window>
